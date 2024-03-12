@@ -1,6 +1,8 @@
 package com.example.chupalupa2;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -8,11 +10,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class HelloApplication extends Application {
+    static final String TERMINAL_PATH="/home/voin/IdeaProjects/chupa-lupa2/out/artifacts/custom_terminal/custom_terminal.jar";
     @Override
     public void start(Stage stage) {
         GridPane grid = new GridPane();
@@ -46,10 +53,8 @@ public class HelloApplication extends Application {
                 String addressStr = addressInput.getText();
                 int valueToWrite = Integer.parseInt(valueInput.getText());
 
-                // Создание экземпляра MyMemory
                 MyMemory myMemory = new MyMemory(pid, addressStr);
 
-                // Чтение значения из адреса
                 int readValue = myMemory.read();
                 System.out.println("Read value from address " + addressStr + ": " + readValue);
 
@@ -61,9 +66,53 @@ public class HelloApplication extends Application {
             }
         });
 
-        grid.getChildren().addAll(pidLabel, pidInput, addressLabel, addressInput, valueLabel, valueInput, submitButton);
+        Label ramLabel = new Label("RAM");
+        GridPane.setConstraints(ramLabel, 0, 8);
+        Label ramText = new Label("RAM");
+        GridPane.setConstraints(ramText, 1, 8);
+        Button ramButton = new Button("get");
+        GridPane.setConstraints(ramButton, 1, 10);
+        ramButton.setOnAction(actionEvent -> {
 
-        Scene scene = new Scene(grid, 300, 200);
+            String result = new String();
+            try {
+                Process free = Runtime.getRuntime().exec("free");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(free.getInputStream()));
+                String line;
+
+                for (int i = 0; (line = reader.readLine()) != null; i++) {
+                    if (i == 1) {
+                        result = line.split(" ")[13];
+                        break;
+                    }
+
+                }
+                free.waitFor();
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            ramText.setText(result);
+        });
+
+        Button termButton = new Button("terminal");
+        GridPane.setConstraints(termButton, 2, 10);
+        termButton.setOnAction(actionEvent -> {
+            Runtime runtime=Runtime.getRuntime();
+            try {
+                Process process=runtime.exec("java -jar " + TERMINAL_PATH);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        grid.getChildren().addAll(
+                pidLabel, pidInput, addressLabel,
+                addressInput, valueLabel, valueInput,
+                submitButton, ramLabel, ramText,
+                ramButton,  termButton);
+
+        Scene scene = new Scene(grid, 350, 250);
         stage.setScene(scene);
         stage.setTitle("Memory Editor");
         stage.show();

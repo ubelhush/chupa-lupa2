@@ -14,4 +14,6 @@ module com.example.chupalupa2 {
 
     opens com.example.chupalupa2 to javafx.fxml;
     exports com.example.chupalupa2;
+    exports com.example.chupalupa2.other_application;
+    opens com.example.chupalupa2.other_application to javafx.fxml;
 }
